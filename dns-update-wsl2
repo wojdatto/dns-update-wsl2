@@ -4,8 +4,14 @@ use v5.10;
 use strict;
 use warnings;
 
-# DNS servers can be found in the output of the ipconfig command
+# Clean exit handler for Ctrl+C
+$SIG{INT} = sub { remove_temp_file_and_exit() };
+
+# DNS servers can be found in the output of the ipconfig.exe
 my $output = `/mnt/c/Windows/System32/ipconfig.exe /all`;
+
+my $temp_file = 'resolv.conf.temp';
+my $target_file = '/etc/resolv.conf';
 my @ips = ();
 
 # Regex is a slightly modified answer from:
@@ -17,7 +23,7 @@ if ($output =~ /DNS Servers[\s\.:]+((\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\s*)+)/m)
     @ips = split(/\s+/, $1);
 }
 
-open(my $fh, '>', 'resolv.conf') or die "Can't open resolv.conf: $!";
+open(my $fh, '>', $temp_file) or die "Can't open $temp_file: $!";
 
 my $datestring = localtime();
 say $fh '# Auto-generated from ipconfig.exe';
@@ -32,26 +38,32 @@ say $fh 'nameserver 1.1.1.1';
 close $fh;
 
 # Print the generated file to the user
-open(my $in, '<', 'resolv.conf') or die "Can't open resolv.conf: $!";
-say "Temporary resolv.conf generated:\n";
+open(my $in, '<', $temp_file) or die "Can't open $temp_file: $!";
+say "$temp_file generated:\n";
 print <$in>;
 
-print "\nUpdate 'etc/resolv.conf'? (y/N): ";
-chomp(my $ok = <>);
+print "\nUpdate '$target_file'? (y/N): ";
+chomp(my $ok = <>) or remove_temp_file_and_exit();
 
 if ($ok eq 'y') {
-    say "Using sudo to update '/etc/resolv.conf'...";
-    my $exit_code = system('sudo', 'mv', 'resolv.conf', '/etc/resolv.conf');
+    say "Using sudo to update '$target_file'...";
+    my $exit_code = system('sudo', 'mv', $temp_file, $target_file);
 
     if ($exit_code != 0) {
-        say "Failed to update '/etc/resolv.conf'!";
-        say 'Deleting temporary resolv.conf...';
-        unlink('resolv.conf') or die 'Failed to delete resolv.conf!';
+        say "Failed to update '$target_file'!";
+        remove_temp_file_and_exit();
     } else {
-        say "Successfully updated '/etc/resolv.conf'!";
+        say "Successfully updated '$target_file'!";
     }
 } else {
-    say 'Aborting...';
-    say 'Deleting temporary resolv.conf...';
-    unlink('resolv.conf') or die 'Failed to delete resolv.conf!';
+    remove_temp_file_and_exit();
+}
+
+sub remove_temp_file_and_exit {
+    say "\nAborting...";
+    if (-e $temp_file) {
+        say "Deleting temporary $temp_file...";
+        unlink($temp_file) or die "Failed to delete $temp_file!";
+    }
+    exit 1;
 }
