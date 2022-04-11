@@ -1,0 +1,54 @@
+#!/usr/bin/perl
+
+use v5.10;
+use strict;
+use warnings;
+
+# DNS servers can be found in the output of the ipconfig command
+my $output = `/mnt/c/Windows/System32/ipconfig.exe /all`;
+my @ips = ();
+
+# Regex is a slightly modified answer from:
+# https://stackoverflow.com/a/12202394/14458327
+#
+# It should match all IPv4 addresses between 1 and 3 digits in each
+# of four sections
+if ($output =~ /DNS Servers[\s\.:]+((\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\s*)+)/m) {
+    @ips = split(/\s+/, $1);
+}
+
+open(my $fh, '>', 'resolv.conf') or die "Can't open resolv.conf: $!";
+
+my $datestring = localtime();
+say $fh '# Auto-generated from ipconfig.exe';
+say $fh "# on $datestring";
+
+foreach (@ips) {
+    say $fh "nameserver $_";
+}
+
+# Add basic Cloudflare DNS as the last one
+say $fh 'nameserver 1.1.1.1';
+close $fh;
+
+# Print the generated file to the user
+open(my $in, '<', 'resolv.conf') or die "Can't open resolv.conf: $!";
+say "Generated resolv.conf:\n";
+print <$in>;
+
+print "\nUpdate 'etc/resolv.conf'? (y/N): ";
+chomp(my $ok = <>);
+
+if ($ok eq 'y') {
+    say "Using sudo to update '/etc/resolv.conf'...";
+    my $exit_code = system('sudo', 'mv', 'resolv.conf', '/etc/resolv.conf');
+
+    if ($exit_code != 0) {
+        say "Failed to update '/etc/resolv.conf'!";
+    }
+    else {
+        say "Successfully updated '/etc/resolv.conf'!";
+    }
+} else {
+    say 'Aborting';
+}
