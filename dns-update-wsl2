@@ -33,7 +33,7 @@ close $fh;
 
 # Print the generated file to the user
 open(my $in, '<', 'resolv.conf') or die "Can't open resolv.conf: $!";
-say "Generated resolv.conf:\n";
+say "Temporary resolv.conf generated:\n";
 print <$in>;
 
 print "\nUpdate 'etc/resolv.conf'? (y/N): ";
@@ -45,10 +45,13 @@ if ($ok eq 'y') {
 
     if ($exit_code != 0) {
         say "Failed to update '/etc/resolv.conf'!";
-    }
-    else {
+        say 'Deleting temporary resolv.conf...';
+        unlink('resolv.conf') or die 'Failed to delete resolv.conf!';
+    } else {
         say "Successfully updated '/etc/resolv.conf'!";
     }
 } else {
-    say 'Aborting';
+    say 'Aborting...';
+    say 'Deleting temporary resolv.conf...';
+    unlink('resolv.conf') or die 'Failed to delete resolv.conf!';
 }

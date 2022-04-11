@@ -37,7 +37,7 @@ Example output:
 
 ```plaintext
 $ ./dns-update-wsl2
-Generated resolv.conf:
+Temporary resolv.conf generated:
 
 # Auto-generated from ipconfig.exe
 # on Mon Apr 11 20:13:13 2022
