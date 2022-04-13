@@ -52,10 +52,13 @@ Successfully updated '/etc/resolv.conf'!
 
 ## `sudo`
 
-Using `sudo` to run the whole script will fail because for some reason
-`ipconfig.exe` doesn't return any output when run with `sudo`, so the
-script uses it later on its own, and thus should be called with the
-standard user privileges.
+Running the script as `root` or with `sudo` will fail because for some
+reason `ipconfig.exe` doesn't return any output in such case. This
+script prompts for sudo later on its own, and thus should be called with
+the standard user privileges.
+
+Running the script with `root` privileges will cause it to exit at the
+very beginning.
 
 ## License
 
