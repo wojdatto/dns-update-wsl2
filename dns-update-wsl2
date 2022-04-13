@@ -10,6 +10,9 @@ $SIG{INT} = sub { remove_temp_file_and_exit() };
 # DNS servers can be found in the output of the ipconfig.exe
 my $output = `/mnt/c/Windows/System32/ipconfig.exe /all`;
 
+# Use Cloudflare as the extra DNS provider
+my $extra_dns = '1.1.1.1';
+
 my $temp_file = 'resolv.conf.temp';
 my $target_file = '/etc/resolv.conf';
 my @ips = ();
@@ -33,8 +36,8 @@ foreach (@ips) {
     say $fh "nameserver $_";
 }
 
-# Add basic Cloudflare DNS as the last one
-say $fh 'nameserver 1.1.1.1';
+# Add well-known DNS as the last one
+say $fh "nameserver $extra_dns";
 close $fh;
 
 # Print the generated file to the user
