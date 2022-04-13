@@ -46,6 +46,12 @@ print "\nUpdate '$target_file'? (y/N): ";
 chomp(my $ok = <>) or remove_temp_file_and_exit();
 
 if ($ok eq 'y') {
+    update_target_file();
+} else {
+    remove_temp_file_and_exit();
+}
+
+sub update_target_file {
     say "Using sudo to update '$target_file'...";
     my $exit_code = system('sudo', 'mv', $temp_file, $target_file);
 
@@ -55,8 +61,7 @@ if ($ok eq 'y') {
     } else {
         say "Successfully updated '$target_file'!";
     }
-} else {
-    remove_temp_file_and_exit();
+    exit 0;
 }
 
 sub remove_temp_file_and_exit {
