@@ -23,6 +23,10 @@ generateResolvConf = false
 See more information about that in [Microsoft
 Docs](https://docs.microsoft.com/en-us/windows/wsl/wsl-config#network-settings).
 
+## Limitations
+
+Script is able to only detect IPv4 DNS servers.
+
 ## How to use?
 
 Obtain `dns-update-wsl2` script in any preferred way, and just run it.
